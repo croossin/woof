@@ -2,7 +2,7 @@ import { newState, saveState, loadState, PetState } from "./state";
 import { applyFeeds, stageFor } from "./sim";
 import { ghLogin, fetchGithubEvents } from "./collectors/github";
 import { registerCwdRepo } from "./collectors/localgit";
-import { BOX_ART } from "./art";
+import { BOX_GRID, renderGrid } from "./sprites";
 
 const dim = (s: string) => `\x1b[2m${s}\x1b[0m`;
 const bold = (s: string) => `\x1b[1m${s}\x1b[0m`;
@@ -24,7 +24,7 @@ export async function adopt(args: string[]): Promise<void> {
   const now = new Date();
 
   console.log("");
-  for (const l of BOX_ART) console.log("  " + cyan(l));
+  for (const l of renderGrid(BOX_GRID)) console.log(l);
   console.log(`\n  Something is scratching at the box...\n`);
 
   const login = await ghLogin();

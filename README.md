@@ -5,19 +5,15 @@ activity is **food**. Time spent working with Claude is **joy**. Neglect it
 and it gets hungry and lonely — but it never dies. Worst case it waits by the
 door until you come back, and is overjoyed when you do.
 
+The dog is drawn as **animated pixel art** right in your terminal — colored
+sprites built from Unicode half-blocks (`▀▄`), with idle animations: blinking,
+a panting tongue, and a tail that wags when it's thriving. Moods show in the
+sprite itself — begging eyes when hungry, a frown when lonely, curled-up eyes
+when asleep. Works in any terminal with 24-bit color (iTerm2, Terminal.app,
+VS Code, Ghostty, kitty, ...) and falls back to 256 colors elsewhere.
+
 ```
-    ,-.____,-.
-   ( (  ◕ ᴥ ◕  ) )
-    \_)       (_/
-    /           \
-   |             |   ,,
-   |             |__//
-   (__)   (__)   '--'
-
-  Byte the good dog is thriving. The tail says it all.
-
-  food  ▰▰▰▰▰▰▰▰▱▱   joy  ▰▰▰▰▰▰▰▱▱▱
-  xp    412 (1088 to best friend)
+woof status     # Byte blinks, pants, wags — then shows the stats
 ```
 
 ## How it works

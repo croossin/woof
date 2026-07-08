@@ -1,11 +1,10 @@
 import { PetState, dayKey } from "./state";
 import { moodFor, stageFor, nextStage, Mood } from "./sim";
-import { petArt, FACES } from "./art";
+import { petFrames, MOOD_SEQUENCE, FACES } from "./sprites";
 import { recentJournal } from "./journal";
 
 const dim = (s: string) => `\x1b[2m${s}\x1b[0m`;
 const bold = (s: string) => `\x1b[1m${s}\x1b[0m`;
-const cyan = (s: string) => `\x1b[36m${s}\x1b[0m`;
 const yellow = (s: string) => `\x1b[33m${s}\x1b[0m`;
 const magenta = (s: string) => `\x1b[35m${s}\x1b[0m`;
 
@@ -23,16 +22,13 @@ const MOOD_BLURBS: Record<Mood, string> = {
   waiting: "has been waiting by the door. Any work will bring them bounding back.",
 };
 
-export function renderStatus(state: PetState, now: Date): string {
+function renderInfo(state: PetState, now: Date): string {
   const mood = moodFor(state, now);
   const stage = stageFor(state.xp);
   const next = nextStage(state.xp);
-  const art = petArt(stage.name, mood);
   const today = state.dailyLog[dayKey(now)];
 
   const lines: string[] = [];
-  lines.push("");
-  for (const l of art) lines.push("  " + cyan(l));
   lines.push("");
   lines.push(`  ${bold(state.name)} the ${stage.name} ${MOOD_BLURBS[mood]}`);
   lines.push("");
@@ -60,6 +56,34 @@ export function renderStatus(state: PetState, now: Date): string {
   );
   lines.push("");
   return lines.join("\n");
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/** Print the pet — animated when we're on a real terminal. */
+export async function showStatus(state: PetState, now: Date): Promise<void> {
+  const mood = moodFor(state, now);
+  const stage = stageFor(state.xp);
+  const frames = petFrames(stage.name, mood);
+  const seq = MOOD_SEQUENCE[mood];
+
+  console.log("");
+  process.stdout.write(frames[0].join("\n") + "\n");
+
+  if (process.stdout.isTTY && frames.length > 1) {
+    const height = frames[0].length;
+    process.stdout.write("\x1b[?25l"); // hide cursor
+    try {
+      for (const idx of seq.slice(1)) {
+        await sleep(320);
+        process.stdout.write(`\x1b[${height}A`);
+        process.stdout.write(frames[idx].join("\n") + "\n");
+      }
+    } finally {
+      process.stdout.write("\x1b[?25h");
+    }
+  }
+  console.log(renderInfo(state, now));
 }
 
 export function renderStatusline(state: PetState, now: Date): string {

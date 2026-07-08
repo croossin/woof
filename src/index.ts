@@ -4,7 +4,8 @@ import { tick, applyFeeds, FeedEvent } from "./sim";
 import { fetchGithubEvents } from "./collectors/github";
 import { scanClaudeTokens } from "./collectors/claude";
 import { scanLocalRepos, registerCwdRepo } from "./collectors/localgit";
-import { renderStatus, renderStatusline, renderJournal } from "./render";
+import { showStatus, renderStatusline, renderJournal } from "./render";
+import { debugGrids } from "./sprites";
 import { adopt } from "./adopt";
 
 const GH_POLL_MINUTES = 5;
@@ -66,13 +67,13 @@ async function main(): Promise<void> {
     case "status": {
       const state = requireState();
       await refresh(state, now);
-      console.log(renderStatus(state, now));
+      await showStatus(state, now);
       break;
     }
     case "feed": {
       const state = requireState();
       await refresh(state, now, true);
-      console.log(renderStatus(state, now));
+      await showStatus(state, now);
       break;
     }
     case "statusline": {
@@ -94,6 +95,13 @@ async function main(): Promise<void> {
       const state = requireState();
       await refresh(state, now);
       console.log(renderJournal(state));
+      break;
+    }
+    case "_sprites": {
+      for (const { label, grid } of debugGrids()) {
+        console.log("--- " + label);
+        console.log(grid.join("\n").replace(/\./g, " "));
+      }
       break;
     }
     case "help":
