@@ -66,6 +66,19 @@ Add to `~/.claude/settings.json`:
 The statusline refresh doubles as the dog's heartbeat — it polls GitHub at
 most every 5 minutes and rescans local sources every 10.
 
+## Tests
+
+```sh
+npm test
+```
+
+Zero-dependency test suite on Node's built-in runner (`node:test`). Pure game
+logic (decay, moods, stages, feeding, journal, sprites) is unit-tested; the
+full CLI flows — onboarding with and without `gh`, private-repo event
+enrichment, `status`/`feed`/`statusline`/`journal`, and dedup — run
+end-to-end against a sandboxed `HOME` with fake `gh`/`git` on `PATH`, so no
+network or real repos are touched.
+
 ## Growth
 
 puppy → good dog (300 xp) → best friend (1500 xp) → old faithful (5000 xp)
