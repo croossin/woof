@@ -86,7 +86,7 @@ export async function showStatus(
   process.stdout.write(frames[0].join("\n") + "\n");
   process.stdout.write(info + "\n");
 
-  if (!process.stdout.isTTY || frames.length < 2) return;
+  if (!process.stdout.isTTY) return; // piped/redirected: one static frame
 
   // Redraw only the sprite region, leaving the stats block untouched.
   const redraw = (idx: number) => {
@@ -94,8 +94,6 @@ export async function showStatus(
     for (const line of frames[idx]) process.stdout.write(line + "\x1b[K\n");
     process.stdout.write(`\x1b[${infoH}B`); // back down past the stats
   };
-
-  process.stdout.write("\x1b[?25l"); // hide cursor
   const restore = () => process.stdout.write("\x1b[?25h");
 
   // A testing hook so we can exercise the animation without hanging forever.
@@ -104,21 +102,32 @@ export async function showStatus(
     : Infinity;
 
   if (opts.loop) {
+    // `woof status`: stay resident, animating, until the user hits Ctrl+C.
+    process.stdout.write("\x1b[?25l"); // hide cursor
     const onSigint = () => {
       restore();
       process.stdout.write("\n");
       process.exit(0);
     };
     process.on("SIGINT", onSigint);
-    let i = 0;
-    for (let count = 0; count < maxFrames; count++) {
-      await sleep(FRAME_MS);
-      i = (i + 1) % seq.length;
-      redraw(seq[i]);
+    if (frames.length < 2) {
+      // A rare single-frame mood: nothing to animate, but still hold the
+      // frame until Ctrl+C rather than dropping back to the prompt.
+      if (maxFrames === Infinity) await new Promise<void>(() => {}); // SIGINT only
+    } else {
+      let i = 0;
+      for (let count = 0; count < maxFrames; count++) {
+        await sleep(FRAME_MS);
+        i = (i + 1) % seq.length;
+        redraw(seq[i]);
+      }
     }
     process.off("SIGINT", onSigint);
     restore();
   } else {
+    // `woof feed`: play the idle loop once and return.
+    if (frames.length < 2) return;
+    process.stdout.write("\x1b[?25l");
     try {
       for (const idx of seq.slice(1)) {
         await sleep(FRAME_MS);

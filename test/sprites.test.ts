@@ -39,12 +39,17 @@ describe("petFrames", () => {
     }
   });
 
-  test("animated moods expose multiple frames; sleepy is a single frame", () => {
-    assert.ok(petFrames("good dog", "content").length >= 2);
-    assert.ok(petFrames("good dog", "thriving").length >= 2);
-    assert.ok(petFrames("good dog", "lonely").length >= 2);
-    assert.ok(petFrames("good dog", "waiting").length >= 2);
-    assert.equal(petFrames("good dog", "sleepy").length, 1);
+  test("every mood animates with at least two frames", () => {
+    for (const m of MOODS) {
+      assert.ok(petFrames("good dog", m).length >= 2, `${m} should animate`);
+    }
+  });
+
+  test("the sleeping dog shows a drifting 'z' bubble", () => {
+    const frames = petFrames("good dog", "sleepy");
+    assert.equal(frames.length, 2);
+    // The two frames differ (the z moves), so the animation isn't frozen.
+    assert.notEqual(frames[0].join("\n"), frames[1].join("\n"));
   });
 
   test("unknown stage falls back to the puppy sprite", () => {

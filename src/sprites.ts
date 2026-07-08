@@ -15,6 +15,7 @@ const PALETTE: Record<string, RGB> = {
   y: [240, 200, 80], // collar tag gold
   x: [193, 154, 107], // cardboard
   X: [141, 110, 74], // cardboard edge
+  z: [150, 170, 205], // sleepy "z" bubble
 };
 
 // One-line kaomoji faces for the statusline (sprites don't fit one line).
@@ -275,7 +276,7 @@ export const MOOD_SEQUENCE: Record<Mood, number[]> = {
   thriving: [0, 1, 0, 1, 0, 1, 0, 1, 0],
   hungry: [0, 0, 0, 1, 0, 0, 0, 1, 0],
   lonely: [0, 0, 0, 0, 0, 0, 1, 0],
-  sleepy: [0],
+  sleepy: [0, 0, 0, 1, 1, 1, 0],
   waiting: [0, 0, 0, 0, 0, 1, 0, 0],
 };
 
@@ -291,9 +292,30 @@ function buildGrid(sprite: StageSprite, v: Variant): string[] {
   return grid;
 }
 
+const setPixel = (row: string, col: number, ch: string) =>
+  col < 0 || col >= row.length ? row : row.slice(0, col) + ch + row.slice(col + 1);
+
+/**
+ * The sleeping dog (eyes closed) with a "z" bubble that drifts up and to the
+ * right across the two frames — so `woof status` keeps breathing at night
+ * instead of freezing on a single frame.
+ */
+function buildSleepyFrames(sprite: StageSprite): string[][] {
+  const body = buildGrid(sprite, { eyes: "blink", mouth: "normal", tail: "down" });
+  const w = body[0].length;
+  const blank = ".".repeat(w);
+  const col = Math.floor(w * 0.72); // above the right ear
+  // Two prepended rows give the bubble room to float; both frames stay the
+  // same height so the animation redraws cleanly in place.
+  const low = [blank, setPixel(blank, col, "z"), ...body];
+  const high = [setPixel(blank, col + 1, "z"), blank, ...body];
+  return [renderGrid(low), renderGrid(high)];
+}
+
 /** Rendered ANSI frames for a stage + mood. Every frame has equal height. */
 export function petFrames(stageName: string, mood: Mood): string[][] {
   const sprite = SPRITES[stageName] ?? PUPPY;
+  if (mood === "sleepy") return buildSleepyFrames(sprite);
   return MOOD_FRAMES[mood].map((v) => renderGrid(buildGrid(sprite, v)));
 }
 
