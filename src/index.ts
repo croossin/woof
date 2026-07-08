@@ -67,7 +67,7 @@ async function main(): Promise<void> {
     case "status": {
       const state = requireState();
       await refresh(state, now);
-      await showStatus(state, now);
+      await showStatus(state, now, { loop: true });
       break;
     }
     case "feed": {

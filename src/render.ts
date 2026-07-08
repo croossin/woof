@@ -60,30 +60,74 @@ function renderInfo(state: PetState, now: Date): string {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-/** Print the pet — animated when we're on a real terminal. */
-export async function showStatus(state: PetState, now: Date): Promise<void> {
+const FRAME_MS = 320;
+
+/**
+ * Print the pet. On a real terminal the sprite animates in place above a
+ * static stats block. With `loop`, it keeps animating until the user hits
+ * Ctrl+C (`woof status`); otherwise it plays the idle sequence once and
+ * returns (`woof feed`). Piped/non-TTY output is a single static frame.
+ */
+export async function showStatus(
+  state: PetState,
+  now: Date,
+  opts: { loop?: boolean } = {}
+): Promise<void> {
   const mood = moodFor(state, now);
   const stage = stageFor(state.xp);
   const frames = petFrames(stage.name, mood);
   const seq = MOOD_SEQUENCE[mood];
+  const info = renderInfo(state, now);
+  const spriteH = frames[0].length;
+  const infoH = info.split("\n").length;
 
-  console.log("");
+  // Initial paint: sprite, then the stats block beneath it.
+  process.stdout.write("\n");
   process.stdout.write(frames[0].join("\n") + "\n");
+  process.stdout.write(info + "\n");
 
-  if (process.stdout.isTTY && frames.length > 1) {
-    const height = frames[0].length;
-    process.stdout.write("\x1b[?25l"); // hide cursor
+  if (!process.stdout.isTTY || frames.length < 2) return;
+
+  // Redraw only the sprite region, leaving the stats block untouched.
+  const redraw = (idx: number) => {
+    process.stdout.write(`\x1b[${spriteH + infoH}A`); // up to the sprite's top
+    for (const line of frames[idx]) process.stdout.write(line + "\x1b[K\n");
+    process.stdout.write(`\x1b[${infoH}B`); // back down past the stats
+  };
+
+  process.stdout.write("\x1b[?25l"); // hide cursor
+  const restore = () => process.stdout.write("\x1b[?25h");
+
+  // A testing hook so we can exercise the animation without hanging forever.
+  const maxFrames = process.env.WOOF_MAX_FRAMES
+    ? parseInt(process.env.WOOF_MAX_FRAMES, 10)
+    : Infinity;
+
+  if (opts.loop) {
+    const onSigint = () => {
+      restore();
+      process.stdout.write("\n");
+      process.exit(0);
+    };
+    process.on("SIGINT", onSigint);
+    let i = 0;
+    for (let count = 0; count < maxFrames; count++) {
+      await sleep(FRAME_MS);
+      i = (i + 1) % seq.length;
+      redraw(seq[i]);
+    }
+    process.off("SIGINT", onSigint);
+    restore();
+  } else {
     try {
       for (const idx of seq.slice(1)) {
-        await sleep(320);
-        process.stdout.write(`\x1b[${height}A`);
-        process.stdout.write(frames[idx].join("\n") + "\n");
+        await sleep(FRAME_MS);
+        redraw(idx);
       }
     } finally {
-      process.stdout.write("\x1b[?25h");
+      restore();
     }
   }
-  console.log(renderInfo(state, now));
 }
 
 export function renderStatusline(state: PetState, now: Date): string {

@@ -13,8 +13,12 @@ when asleep. Works in any terminal with 24-bit color (iTerm2, Terminal.app,
 VS Code, Ghostty, kitty, ...) and falls back to 256 colors elsewhere.
 
 ```
-woof status     # Byte blinks, pants, wags — then shows the stats
+woof status     # Byte blinks, pants, and wags — animates until you hit Ctrl+C
 ```
+
+`woof status` keeps the dog animating in place above its stats until you press
+Ctrl+C. `woof feed` plays the idle loop once and returns. Piped or non-TTY
+output is a single static frame, so it's safe in scripts and the statusline.
 
 ## How it works
 

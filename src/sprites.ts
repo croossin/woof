@@ -258,9 +258,15 @@ const MOOD_FRAMES: Record<Mood, Variant[]> = {
     { eyes: "begging", mouth: "normal", tail: "down" },
     { eyes: "open", mouth: "normal", tail: "down" },
   ],
-  lonely: [{ eyes: "blink", mouth: "frown", tail: "down" }],
+  lonely: [
+    { eyes: "open", mouth: "frown", tail: "down" },
+    { eyes: "blink", mouth: "frown", tail: "down" },
+  ],
   sleepy: [{ eyes: "blink", mouth: "normal", tail: "down" }],
-  waiting: [{ eyes: "blink", mouth: "frown", tail: "down" }],
+  waiting: [
+    { eyes: "open", mouth: "frown", tail: "down" },
+    { eyes: "blink", mouth: "frown", tail: "down" },
+  ],
 };
 
 /** How the frames should be sequenced over an idle loop. */
@@ -268,9 +274,9 @@ export const MOOD_SEQUENCE: Record<Mood, number[]> = {
   content: [0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0],
   thriving: [0, 1, 0, 1, 0, 1, 0, 1, 0],
   hungry: [0, 0, 0, 1, 0, 0, 0, 1, 0],
-  lonely: [0],
+  lonely: [0, 0, 0, 0, 0, 0, 1, 0],
   sleepy: [0],
-  waiting: [0],
+  waiting: [0, 0, 0, 0, 0, 1, 0, 0],
 };
 
 function buildGrid(sprite: StageSprite, v: Variant): string[] {
