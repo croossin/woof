@@ -61,6 +61,14 @@ describe("renderJournal", () => {
     assert.ok(out.includes("2026-06-02"));
     assert.ok(out.includes("2026-06-03"));
   });
+
+  test("shows the most recent day first (descending)", () => {
+    const s = newState("Byte", "me", T0);
+    ensureDay(s, "2026-06-01").commits = 1;
+    ensureDay(s, "2026-06-05").commits = 1;
+    const out = strip(renderJournal(s));
+    assert.ok(out.indexOf("2026-06-05") < out.indexOf("2026-06-01"), "newest should come first");
+  });
 });
 
 describe("showStatus animation controller", () => {

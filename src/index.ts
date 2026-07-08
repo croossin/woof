@@ -6,7 +6,8 @@ import { scanClaudeTokens } from "./collectors/claude";
 import { scanLocalRepos, registerCwdRepo } from "./collectors/localgit";
 import { showStatus, renderStatusline, renderJournal } from "./render";
 import { debugGrids } from "./sprites";
-import { adopt } from "./adopt";
+import { adopt, connectGithub } from "./adopt";
+import { installStatusline } from "./setup";
 
 const GH_POLL_MINUTES = 5;
 const LOCAL_SCAN_MINUTES = 10;
@@ -48,11 +49,13 @@ function requireState(): PetState {
 const HELP = `
   🐶 woof — a puppy that grows with your work
 
-  woof adopt [--name X]   bring your dog home (reads your GitHub history via gh)
-  woof status             visit your dog
-  woof feed               force a refresh from all sources right now
-  woof statusline         one-line output for the Claude Code statusline
-  woof journal            read the last week of your dog's diary
+  woof adopt [--name X]       bring your dog home (reads your GitHub history via gh)
+  woof status                 visit your dog
+  woof connect                attach GitHub to an existing dog and back-fill history
+  woof feed                   force a refresh from all sources right now
+  woof journal                read the last week of your dog's diary
+  woof statusline             one-line output for the Claude Code statusline
+  woof statusline --install   add woof to your Claude Code statusline
 `;
 
 async function main(): Promise<void> {
@@ -63,6 +66,10 @@ async function main(): Promise<void> {
     case "adopt":
     case "hatch": // old habits
       await adopt(args);
+      break;
+    case "connect":
+    case "link":
+      await connectGithub();
       break;
     case "status": {
       const state = requireState();
@@ -77,6 +84,10 @@ async function main(): Promise<void> {
       break;
     }
     case "statusline": {
+      if (args.includes("--install")) {
+        installStatusline();
+        break;
+      }
       // Must never crash or block — it runs inside Claude Code's statusline.
       try {
         const state = loadState();

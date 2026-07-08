@@ -342,3 +342,30 @@ export const BOX_GRID = [
   "XxxxxxxxxxxxxxxxxxX.",
   "XXXXXXXXXXXXXXXXXXXX",
 ];
+
+// The eye row is BOX_GRID[3]; stamp the pupils (k) + shine (w) at an offset
+// so the pup can glance around inside the box.
+const BOX_EYE_CANVAS = "..dooooooooooooood..";
+function boxEyeRow(off: number): string {
+  let r = BOX_EYE_CANVAS;
+  for (const [k, w] of [
+    [4, 5],
+    [12, 13],
+  ]) {
+    r = setPixel(r, k + off, "k");
+    r = setPixel(r, w + off, "w");
+  }
+  return r;
+}
+
+/** Box frames with the pup's eyes looking left / center / right. */
+export function boxFrames(): string[][] {
+  return [-1, 0, 1].map((off) => {
+    const grid = [...BOX_GRID];
+    grid[3] = boxEyeRow(off);
+    return renderGrid(grid);
+  });
+}
+
+// Glance left, center, right, center… while scratching to get out.
+export const BOX_SEQUENCE = [1, 0, 1, 2, 1, 0, 1, 2, 1];

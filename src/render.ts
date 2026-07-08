@@ -1,6 +1,6 @@
 import { PetState, dayKey } from "./state";
 import { moodFor, stageFor, nextStage, Mood } from "./sim";
-import { petFrames, MOOD_SEQUENCE, FACES } from "./sprites";
+import { petFrames, MOOD_SEQUENCE, FACES, boxFrames, BOX_SEQUENCE } from "./sprites";
 import { recentJournal } from "./journal";
 
 const dim = (s: string) => `\x1b[2m${s}\x1b[0m`;
@@ -59,6 +59,27 @@ function renderInfo(state: PetState, now: Date): string {
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/** The adoption box, with the pup glancing around as it scratches to get out. */
+export async function animateBox(cycles = 2): Promise<void> {
+  const frames = boxFrames();
+  const h = frames[0].length;
+  console.log("");
+  process.stdout.write(frames[1].join("\n") + "\n"); // start looking ahead
+  if (!process.stdout.isTTY) return;
+  process.stdout.write("\x1b[?25l");
+  try {
+    for (let c = 0; c < cycles; c++) {
+      for (const idx of BOX_SEQUENCE) {
+        await sleep(170);
+        process.stdout.write(`\x1b[${h}A`);
+        for (const line of frames[idx]) process.stdout.write(line + "\x1b[K\n");
+      }
+    }
+  } finally {
+    process.stdout.write("\x1b[?25h");
+  }
+}
 
 const FRAME_MS = 320;
 
@@ -153,7 +174,8 @@ export function renderJournal(state: PetState): string {
   const lines: string[] = [""];
   lines.push(`  ${bold(`${state.name}'s journal`)}`);
   lines.push("");
-  for (const e of entries) {
+  // Most recent day first.
+  for (const e of [...entries].reverse()) {
     lines.push(`  ${dim(e.day)}  ${e.line}`);
   }
   lines.push("");

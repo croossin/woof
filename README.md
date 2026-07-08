@@ -66,21 +66,38 @@ woof adopt
 | command | what it does |
 | --- | --- |
 | `woof adopt` | bring your dog home (`--name X` to name it, default Byte) |
-| `woof status` | visit your dog |
+| `woof status` | visit your dog (animates until you press Ctrl+C) |
+| `woof connect` | attach GitHub to an existing dog and back-fill history |
 | `woof feed` | force an immediate refresh from all sources |
+| `woof journal` | your dog's diary, most recent day first |
 | `woof statusline` | one-line render for the Claude Code statusline |
-| `woof journal` | the last week of your dog's diary |
+| `woof statusline --install` | add woof to your Claude Code statusline |
 
 ## Statusline (recommended)
 
-Add to `~/.claude/settings.json`:
+Let your dog live in your Claude Code statusline with one command:
+
+```sh
+woof statusline --install
+```
+
+That writes the `statusLine` block into `~/.claude/settings.json` for you
+(preserving anything already there); start a new Claude Code session to see it.
+The statusline refresh doubles as the dog's heartbeat — it polls GitHub at
+most every 5 minutes and rescans local sources every 10.
+
+To set it up by hand instead, add:
 
 ```json
 "statusLine": { "type": "command", "command": "woof statusline" }
 ```
 
-The statusline refresh doubles as the dog's heartbeat — it polls GitHub at
-most every 5 minutes and rescans local sources every 10.
+## No GitHub yet?
+
+woof still grows from local commits and Claude sessions without `gh`. Once you
+install the [GitHub CLI](https://cli.github.com) and run `gh auth login`, run
+`woof connect` and your dog back-fills its history across all your repos — no
+re-adopting.
 
 ## Tests
 

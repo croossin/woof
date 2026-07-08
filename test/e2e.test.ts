@@ -1,5 +1,7 @@
 import { test, describe, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
+import * as fs from "node:fs";
+import * as path from "node:path";
 import {
   createSandbox,
   runCli,
@@ -60,7 +62,8 @@ describe("adopt — onboarding", () => {
     const r = runCli(sb, ["adopt"]); // no ghLogin → fake gh login fails
     assert.equal(r.status, 0);
     assert.match(r.text, /is home/);
-    assert.match(r.text, /grow from local commits/);
+    assert.match(r.text, /grow from your local commits/);
+    assert.match(r.text, /gh auth login/); // tells them how to connect
     const s = readState(sb);
     assert.equal(s.name, "Byte");
     assert.equal(s.githubLogin, null);
@@ -235,6 +238,91 @@ describe("feed — forced refresh from all sources", () => {
     });
     assert.equal(r.status, 0);
     assert.equal(readState(sb).totals.commits, 2);
+  });
+});
+
+describe("connect — attaching GitHub after a gh-less adoption", () => {
+  test("back-fills history into the existing dog without re-adopting", () => {
+    // Adopt with no gh → no login, no history.
+    runCli(sb, ["adopt", "--name", "Byte"]);
+    const before = readState(sb);
+    assert.equal(before.githubLogin, null);
+    assert.equal(before.totals.commits, 0);
+    const hatchedAt = before.hatchedAt;
+
+    // Later: gh is available. connect back-fills into the SAME dog.
+    const events = writeJson(sb, "events.json", [
+      pushEvent("e1", "2026-07-05T10:00:00Z", ["a1", "a2", "a3"]),
+      mergedPrEvent("e2", "2026-07-05T12:00:00Z"),
+    ]);
+    const r = runCli(sb, ["connect"], { ghLogin: "me", eventsFile: events });
+    assert.equal(r.status, 0);
+    assert.match(r.text, /Connected to @me/);
+
+    const after = readState(sb);
+    assert.equal(after.githubLogin, "me");
+    assert.equal(after.totals.commits, 3);
+    assert.equal(after.totals.prsMerged, 1);
+    assert.equal(after.name, "Byte"); // same dog
+    assert.equal(after.hatchedAt, hatchedAt); // not re-adopted
+  });
+
+  test("without gh, connect explains how to set it up", () => {
+    runCli(sb, ["adopt"]);
+    const r = runCli(sb, ["connect"]); // no ghLogin
+    assert.equal(r.status, 0);
+    assert.match(r.text, /gh auth login/);
+    assert.equal(readState(sb).githubLogin, null);
+  });
+
+  test("connect before adoption tells you to adopt first", () => {
+    const r = runCli(sb, ["connect"], { ghLogin: "me" });
+    assert.equal(r.status, 1);
+    assert.match(r.text, /adopt/);
+  });
+});
+
+describe("statusline --install", () => {
+  function settingsPath(): string {
+    return path.join(sb.home, ".claude", "settings.json");
+  }
+
+  test("writes the statusLine block into ~/.claude/settings.json", () => {
+    runCli(sb, ["adopt"]);
+    const r = runCli(sb, ["statusline", "--install"]);
+    assert.equal(r.status, 0);
+    const settings = JSON.parse(fs.readFileSync(settingsPath(), "utf8"));
+    assert.equal(settings.statusLine.type, "command");
+    assert.match(settings.statusLine.command, /woof statusline/);
+  });
+
+  test("preserves existing settings and is idempotent", () => {
+    runCli(sb, ["adopt"]);
+    fs.mkdirSync(path.join(sb.home, ".claude"), { recursive: true });
+    fs.writeFileSync(settingsPath(), JSON.stringify({ theme: "dark" }, null, 2));
+    runCli(sb, ["statusline", "--install"]);
+    let settings = JSON.parse(fs.readFileSync(settingsPath(), "utf8"));
+    assert.equal(settings.theme, "dark"); // untouched
+    assert.match(settings.statusLine.command, /woof/);
+
+    // Running again is a no-op that reports it's already installed.
+    const r2 = runCli(sb, ["statusline", "--install"]);
+    assert.match(r2.text, /already/i);
+    settings = JSON.parse(fs.readFileSync(settingsPath(), "utf8"));
+    assert.match(settings.statusLine.command, /woof/);
+  });
+
+  test("does not overwrite a non-woof statusLine", () => {
+    runCli(sb, ["adopt"]);
+    fs.mkdirSync(path.join(sb.home, ".claude"), { recursive: true });
+    fs.writeFileSync(
+      settingsPath(),
+      JSON.stringify({ statusLine: { type: "command", command: "my-prompt" } }, null, 2)
+    );
+    const r = runCli(sb, ["statusline", "--install"]);
+    assert.equal(r.status, 0);
+    const settings = JSON.parse(fs.readFileSync(settingsPath(), "utf8"));
+    assert.equal(settings.statusLine.command, "my-prompt"); // left alone
   });
 });
 

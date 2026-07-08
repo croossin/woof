@@ -7,6 +7,8 @@ import {
   FACES,
   debugGrids,
   BOX_GRID,
+  boxFrames,
+  BOX_SEQUENCE,
 } from "../src/sprites";
 import { Mood } from "../src/sim";
 
@@ -120,5 +122,23 @@ describe("BOX_GRID", () => {
   test("is a non-empty rectangle of rows", () => {
     assert.ok(BOX_GRID.length > 0);
     assert.ok(BOX_GRID.every((r) => typeof r === "string" && r.length > 0));
+  });
+});
+
+describe("boxFrames (adoption animation)", () => {
+  test("has three frames with the eyes in different positions", () => {
+    const frames = boxFrames();
+    assert.equal(frames.length, 3);
+    const raw = frames.map((f) => f.join("\n"));
+    assert.equal(new Set(raw).size, 3, "all three eye positions should differ");
+  });
+
+  test("every frame is the same height", () => {
+    const heights = new Set(boxFrames().map((f) => f.length));
+    assert.equal(heights.size, 1);
+  });
+
+  test("BOX_SEQUENCE only references existing frames", () => {
+    for (const idx of BOX_SEQUENCE) assert.ok(idx >= 0 && idx < 3);
   });
 });
