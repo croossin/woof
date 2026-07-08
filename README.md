@@ -38,12 +38,28 @@ passed since the last one — the classic Tamagotchi trick.
 ## Install
 
 ```sh
-npm install && npm run build && npm link
+npm install -g @roo-app/woof
 woof adopt
 ```
 
-If `gh` is installed and logged in, woof reads your recent GitHub history and
-your dog arrives already knowing your scent.
+Or try it without installing:
+
+```sh
+npx @roo-app/woof adopt
+```
+
+**Requirements:** Node ≥ 18. `git` and the [`gh` CLI](https://cli.github.com)
+are optional but recommended — with `gh` logged in, woof reads your recent
+GitHub history and your dog arrives already knowing your scent. Without them it
+still grows from local commits and Claude sessions.
+
+### From source
+
+```sh
+git clone https://github.com/croossin/woof && cd woof
+npm install && npm run build && npm link
+woof adopt
+```
 
 ## Commands
 
