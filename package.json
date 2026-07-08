@@ -37,6 +37,7 @@
   "scripts": {
     "clean": "rm -rf dist dist-test",
     "build": "npm run clean && tsc",
+    "postbuild": "chmod +x dist/index.js",
     "dev": "tsc --watch",
     "pretest": "tsc -p tsconfig.test.json",
     "test": "node --test dist-test/test/*.test.js",
