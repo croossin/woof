@@ -1,0 +1,21 @@
+{
+  "name": "shellby",
+  "version": "0.1.0",
+  "description": "A tiny hermit crab that lives in your terminal and grows with your work — fed by git, kept company by Claude.",
+  "license": "MIT",
+  "type": "commonjs",
+  "bin": {
+    "shellby": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "@types/node": "^20.14.0"
+  }
+}

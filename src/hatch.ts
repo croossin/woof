@@ -1,0 +1,74 @@
+import { newState, saveState, loadState, PetState } from "./state";
+import { applyFeeds, stageFor } from "./sim";
+import { ghLogin, fetchGithubEvents } from "./collectors/github";
+import { registerCwdRepo } from "./collectors/localgit";
+import { EGG_ART } from "./art";
+
+const dim = (s: string) => `\x1b[2m${s}\x1b[0m`;
+const bold = (s: string) => `\x1b[1m${s}\x1b[0m`;
+const cyan = (s: string) => `\x1b[36m${s}\x1b[0m`;
+
+export async function hatch(args: string[]): Promise<void> {
+  const existing = loadState();
+  const force = args.includes("--force");
+  if (existing && !force) {
+    console.log(
+      `\n  ${bold(existing.name)} already lives here. Run ${cyan("shellby status")} to visit,` +
+        `\n  or ${dim("shellby hatch --force")} to start over (this abandons them!).\n`
+    );
+    return;
+  }
+
+  const nameIdx = args.indexOf("--name");
+  const name = nameIdx >= 0 && args[nameIdx + 1] ? args[nameIdx + 1] : "Shellby";
+  const now = new Date();
+
+  console.log("");
+  for (const l of EGG_ART) console.log("  " + cyan(l));
+  console.log(`\n  Something is stirring...\n`);
+
+  const login = await ghLogin();
+  const state: PetState = newState(name, login, now);
+  await registerCwdRepo(state);
+
+  if (login) {
+    console.log(dim(`  Found GitHub account @${login} via gh — reading the last few months...`));
+    const events = await fetchGithubEvents(state, { pages: 3 });
+    if (events.length > 0) {
+      applyFeeds(state, events, now);
+      // History earns XP and memories, but a new pet starts with fresh meters.
+      state.hunger = 80;
+      state.happiness = 75;
+    }
+  } else {
+    console.log(
+      dim(
+        "  Couldn't reach GitHub via the gh CLI (not installed or not logged in)." +
+          "\n  Shellby will grow from local commits and Claude sessions instead." +
+          "\n  Run `gh auth login` any time and shellby will pick it up on the next hatch."
+      )
+    );
+  }
+
+  saveState(state);
+
+  const stage = stageFor(state.xp);
+  console.log(`\n  🐚 ${bold(name)} hatched!`);
+  if (state.xp > 0) {
+    console.log(
+      `  They already know you a little — ${state.totals.commits} commits and ` +
+        `${state.totals.prsMerged} merged PRs remembered (${state.xp} xp, a ${stage.name}).`
+    );
+  }
+  console.log(`
+  Visit any time:        ${cyan("shellby status")}
+  Read the diary:        ${cyan("shellby journal")}
+
+  ${bold("Optional:")} let ${name} live in your Claude Code statusline by adding
+  this to ${dim("~/.claude/settings.json")}:
+
+    "statusLine": { "type": "command", "command": "shellby statusline" }
+
+  The statusline refresh doubles as ${name}'s heartbeat — no hooks, no daemons.
+`);
+}
