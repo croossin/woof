@@ -5,7 +5,7 @@ import { fetchGithubEvents } from "./collectors/github";
 import { scanClaudeTokens } from "./collectors/claude";
 import { scanLocalRepos, registerCwdRepo } from "./collectors/localgit";
 import { renderStatus, renderStatusline, renderJournal } from "./render";
-import { hatch } from "./hatch";
+import { adopt } from "./adopt";
 
 const GH_POLL_MINUTES = 5;
 const LOCAL_SCAN_MINUTES = 10;
@@ -38,20 +38,20 @@ async function refresh(state: PetState, now: Date, force = false): Promise<void>
 function requireState(): PetState {
   const state = loadState();
   if (!state) {
-    console.log("\n  No pet yet! Run `shellby hatch` to begin.\n");
+    console.log("\n  No dog yet! Run `woof adopt` to bring one home.\n");
     process.exit(1);
   }
   return state;
 }
 
 const HELP = `
-  🐚 shellby — a tiny companion that grows with your work
+  🐶 woof — a puppy that grows with your work
 
-  shellby hatch [--name X]   hatch your pet (reads your GitHub history via gh)
-  shellby status             visit your pet
-  shellby feed               force a refresh from all sources right now
-  shellby statusline         one-line output for the Claude Code statusline
-  shellby journal            read the last week of your pet's diary
+  woof adopt [--name X]   bring your dog home (reads your GitHub history via gh)
+  woof status             visit your dog
+  woof feed               force a refresh from all sources right now
+  woof statusline         one-line output for the Claude Code statusline
+  woof journal            read the last week of your dog's diary
 `;
 
 async function main(): Promise<void> {
@@ -59,8 +59,9 @@ async function main(): Promise<void> {
   const now = new Date();
 
   switch (cmd) {
-    case "hatch":
-      await hatch(args);
+    case "adopt":
+    case "hatch": // old habits
+      await adopt(args);
       break;
     case "status": {
       const state = requireState();
@@ -79,13 +80,13 @@ async function main(): Promise<void> {
       try {
         const state = loadState();
         if (!state) {
-          console.log("🐚 (run `shellby hatch`)");
+          console.log("🐶 (run `woof adopt`)");
           break;
         }
         await refresh(state, now);
         console.log(renderStatusline(state, now));
       } catch {
-        console.log("🐚");
+        console.log("🐶");
       }
       break;
     }
@@ -108,6 +109,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((err) => {
-  console.error("shellby stumbled:", err?.message ?? err);
+  console.error("woof whimpered:", err?.message ?? err);
   process.exit(1);
 });

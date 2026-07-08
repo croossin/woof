@@ -2,8 +2,8 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 
-export const SHELLBY_DIR = path.join(os.homedir(), ".shellby");
-const STATE_PATH = path.join(SHELLBY_DIR, "state.json");
+export const WOOF_DIR = path.join(os.homedir(), ".woof");
+const STATE_PATH = path.join(WOOF_DIR, "state.json");
 
 export interface DailyActivity {
   commits: number;
@@ -28,7 +28,7 @@ export interface PetState {
   hunger: number; // 0-100, 100 = full
   happiness: number; // 0-100
   xp: number;
-  hibernating: boolean;
+  waiting: boolean; // waiting by the door after long absence
   githubLogin: string | null;
   lastGhPoll: string | null;
   lastClaudeScan: string | null;
@@ -53,7 +53,7 @@ export function newState(name: string, githubLogin: string | null, now: Date): P
     hunger: 80,
     happiness: 75,
     xp: 0,
-    hibernating: false,
+    waiting: false,
     githubLogin,
     lastGhPoll: null,
     lastClaudeScan: iso,
@@ -85,7 +85,7 @@ export function saveState(state: PetState): void {
   for (const day of days.slice(0, Math.max(0, days.length - 60))) {
     delete state.dailyLog[day];
   }
-  fs.mkdirSync(SHELLBY_DIR, { recursive: true });
+  fs.mkdirSync(WOOF_DIR, { recursive: true });
   const tmp = STATE_PATH + ".tmp";
   fs.writeFileSync(tmp, JSON.stringify(state, null, 2));
   fs.renameSync(tmp, STATE_PATH);

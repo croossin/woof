@@ -13,8 +13,8 @@ export function journalLine(day: string, a: DailyActivity, name: string): string
   if (a.prsMerged > 0) {
     return pick(
       [
-        `We merged ${a.prsMerged === 1 ? "a pull request" : `${a.prsMerged} pull requests`} today. ${name} did a little dance in the shell.`,
-        `Merge day. The shell feels a little roomier somehow.`,
+        `We merged ${a.prsMerged === 1 ? "a pull request" : `${a.prsMerged} pull requests`} today. ${name} did zoomies around the terminal.`,
+        `Merge day. ${name}'s tail would not stop.`,
         `Something we worked on is out in the world now. ${name} is proud of you.`,
       ],
       day + "pr"
@@ -24,7 +24,7 @@ export function journalLine(day: string, a: DailyActivity, name: string): string
     return pick(
       [
         `No commits today, but you helped someone else's work along. ${name} thinks that counts double.`,
-        `A day of reviews. Quiet, generous work.`,
+        `A day of reviews. Quiet, generous work. ${name} approves.`,
       ],
       day + "rev"
     );
@@ -32,8 +32,8 @@ export function journalLine(day: string, a: DailyActivity, name: string): string
   if (busy >= 8) {
     return pick(
       [
-        `A big day — ${a.commits} commits tucked safely away. ${name} is full and sleepy.`,
-        `${a.commits} commits! The shell feels heavier, in a good way.`,
+        `A big day — ${a.commits} commits fetched and buried safely in the yard. ${name} is full and sleepy.`,
+        `${a.commits} commits! ${name} could barely keep up with all the fetching.`,
       ],
       day + "big"
     );
@@ -51,7 +51,7 @@ export function journalLine(day: string, a: DailyActivity, name: string): string
     return pick(
       [
         `No commits today, but we talked a lot. ${name} likes the company.`,
-        `A thinking day, mostly. ${name} sat with you while you worked things out.`,
+        `A thinking day, mostly. ${name} kept your feet warm while you worked things out.`,
       ],
       day + "claude"
     );

@@ -1,11 +1,11 @@
 {
-  "name": "shellby",
+  "name": "woof",
   "version": "0.1.0",
-  "description": "A tiny hermit crab that lives in your terminal and grows with your work — fed by git, kept company by Claude.",
+  "description": "A puppy that lives in your terminal and grows with your work - fed by git, kept company by Claude.",
   "license": "MIT",
   "type": "commonjs",
   "bin": {
-    "shellby": "dist/index.js"
+    "woof": "dist/index.js"
   },
   "scripts": {
     "build": "tsc",

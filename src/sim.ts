@@ -12,10 +12,10 @@ export interface Stage {
 }
 
 export const STAGES: Stage[] = [
-  { name: "hatchling", minXp: 0 },
-  { name: "sprout", minXp: 300 },
-  { name: "companion", minXp: 1500 },
-  { name: "elder", minXp: 5000 },
+  { name: "puppy", minXp: 0 },
+  { name: "good dog", minXp: 300 },
+  { name: "best friend", minXp: 1500 },
+  { name: "old faithful", minXp: 5000 },
 ];
 
 export function stageFor(xp: number): Stage {
@@ -35,7 +35,7 @@ export function nextStage(xp: number): Stage | null {
 
 const HUNGER_DECAY_PER_HOUR = 2.0; // full -> empty in ~2 days
 const HAPPY_DECAY_PER_HOUR = 1.2; // full -> empty in ~3.5 days
-const HIBERNATE_AFTER_DAYS = 14;
+const WAIT_BY_DOOR_AFTER_DAYS = 14;
 
 const clamp = (n: number, lo = 0, hi = 100) => Math.min(hi, Math.max(lo, n));
 
@@ -51,15 +51,15 @@ export function isAsleep(state: PetState, now: Date): boolean {
 export function tick(state: PetState, now: Date): void {
   const last = new Date(state.lastTick);
   const hours = Math.max(0, (now.getTime() - last.getTime()) / 3_600_000);
-  if (hours > 0 && !state.hibernating) {
+  if (hours > 0 && !state.waiting) {
     // Roughly a third of any long stretch is sleep, when decay halves.
     const effective = hours <= 1 ? hours : hours * 0.84;
     state.hunger = clamp(state.hunger - effective * HUNGER_DECAY_PER_HOUR);
     state.happiness = clamp(state.happiness - effective * HAPPY_DECAY_PER_HOUR);
   }
   const idleDays = (now.getTime() - new Date(state.lastActivity).getTime()) / 86_400_000;
-  if (idleDays > HIBERNATE_AFTER_DAYS && !state.hibernating) {
-    state.hibernating = true;
+  if (idleDays > WAIT_BY_DOOR_AFTER_DAYS && !state.waiting) {
+    state.waiting = true;
     state.hunger = Math.max(state.hunger, 10);
     state.happiness = Math.max(state.happiness, 10);
   }
@@ -69,8 +69,8 @@ export function tick(state: PetState, now: Date): void {
 /** Apply feed events to meters, XP, totals, and the daily log. */
 export function applyFeeds(state: PetState, events: FeedEvent[], now: Date): void {
   if (events.length === 0) return;
-  if (state.hibernating) {
-    state.hibernating = false;
+  if (state.waiting) {
+    state.waiting = false;
     state.happiness = clamp(state.happiness + 25); // overjoyed you're back
   }
   for (const e of events) {
@@ -115,7 +115,7 @@ export function applyFeeds(state: PetState, events: FeedEvent[], now: Date): voi
 }
 
 export type Mood =
-  | "hibernating"
+  | "waiting"
   | "sleepy"
   | "hungry"
   | "lonely"
@@ -123,7 +123,7 @@ export type Mood =
   | "content";
 
 export function moodFor(state: PetState, now: Date): Mood {
-  if (state.hibernating) return "hibernating";
+  if (state.waiting) return "waiting";
   if (isAsleep(state, now)) return "sleepy";
   if (state.hunger < 35) return "hungry";
   if (state.happiness < 35) return "lonely";

@@ -15,12 +15,12 @@ export function bar(value: number, width = 10): string {
 }
 
 const MOOD_BLURBS: Record<Mood, string> = {
-  thriving: "is thriving.",
+  thriving: "is thriving. The tail says it all.",
   content: "is doing alright.",
-  hungry: "is hungry — a commit would really hit the spot.",
+  hungry: "is giving you the begging eyes. A commit would really hit the spot.",
   lonely: "misses working with you.",
-  sleepy: "is asleep. Shhh.",
-  hibernating: "is hibernating, tucked deep in the shell. Any work will wake them.",
+  sleepy: "is curled up asleep. Shhh.",
+  waiting: "has been waiting by the door. Any work will bring them bounding back.",
 };
 
 export function renderStatus(state: PetState, now: Date): string {
@@ -65,8 +65,7 @@ export function renderStatus(state: PetState, now: Date): string {
 export function renderStatusline(state: PetState, now: Date): string {
   const mood = moodFor(state, now);
   const stage = stageFor(state.xp);
-  const face = mood === "hibernating" ? "z z z" : FACES[mood];
-  return `🐚(${face}) 🍖${bar(state.hunger, 5)} ✨${bar(state.happiness, 5)} ${stage.name}`;
+  return `🐶(${FACES[mood]}) 🍖${bar(state.hunger, 5)} ✨${bar(state.happiness, 5)} ${stage.name}`;
 }
 
 export function renderJournal(state: PetState): string {
